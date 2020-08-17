@@ -1,7 +1,7 @@
 import { RouterContext } from 'https://deno.land/x/oak/mod.ts'
 import * as bcrypt from 'https://deno.land/x/bcrypt@v0.2.4/mod.ts'
 
-import { SignupArgs, UserResponse, User } from '../types/types.ts'
+import { SignupArgs, UserResponse, User, SigninArgs } from '../types/types.ts'
 import {
   validateUsername,
   validatePassword,
@@ -65,6 +65,54 @@ export const Mutation = {
 
       // Create a JWT token
       const token = await createToken(newUser.id, newUser.token_version)
+      // console.log('Token', token)
+
+      // Send the JWT token to the frontend
+      sendToken(ctx.cookies, token)
+
+      return returnedUser
+    } catch (error) {
+      throw error
+    }
+  },
+
+  signin: async (
+    _: any,
+    { email, password }: SigninArgs,
+    ctx: RouterContext
+  ): Promise<UserResponse | null> => {
+    try {
+      // Check  if args obj is provided
+      if (!email) throw new Error('Email is required.')
+      if (!password) throw new Error('Password is required.')
+
+      // Validate Email
+      const formatedEmail = email.trim().toLowerCase()
+
+      // Connect to the database
+      await client.connect()
+
+      // Check user
+      const result = await client.query(queryByEmailString(formatedEmail))
+      const user = result.rowsOfObjects()[0] as User
+      if (!user) throw new Error('Email or password is invalid')
+
+      // Validate the password
+      const isPasswordValid = await bcrypt.compare(password, user.password)
+      if (!isPasswordValid) throw new Error('Email or password is invalid')
+
+      const returnedUser: UserResponse = {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        roles: user.roles,
+        created_at: user.created_at,
+      }
+
+      await client.end()
+
+      // Create a JWT token
+      const token = await createToken(user.id, user.token_version)
       // console.log('Token', token)
 
       // Send the JWT token to the frontend

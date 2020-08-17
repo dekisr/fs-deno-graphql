@@ -22,10 +22,7 @@ export const typeDefs = (gql as any)`
   }
 
   type Mutation {
-    signup(
-      username: String!,
-      email: String!,
-      password: String!
-    ): User
+    signup(username: String!, email: String!, password: String!): User
+    signin(email: String!, password: String!): User
   }
 `
