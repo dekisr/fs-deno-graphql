@@ -1,3 +1,4 @@
+import { RouterContext } from 'https://deno.land/x/oak/mod.ts'
 import * as bcrypt from 'https://deno.land/x/bcrypt@v0.2.4/mod.ts'
 
 import { SignupArgs, UserResponse, User } from '../types/types.ts'
@@ -8,13 +9,13 @@ import {
 } from '../utils/validations.ts'
 import { client } from '../db/db.ts'
 import { queryByEmailString, insertUserString } from '../utils/queryStrings.ts'
+import { createToken, sendToken } from '../utils/tokenHandler.ts'
 
 export const Mutation = {
   signup: async (
-    parent: any,
+    _: any,
     { username, email, password }: SignupArgs,
-    ctx: any,
-    info: any
+    ctx: RouterContext
   ): Promise<UserResponse | null> => {
     try {
       // Check  if args obj is provided
@@ -42,7 +43,7 @@ export const Mutation = {
       // Check user
       const result = await client.query(queryByEmailString(formatedEmail))
       const user = result.rowsOfObjects()[0] as User
-      if (user) throw new Error('This email already in use')
+      if (user) throw new Error('This email is already in use')
 
       // Hash the password
       const hashedPassword = await bcrypt.hash(password)
@@ -59,6 +60,15 @@ export const Mutation = {
         roles: newUser.roles,
         created_at: newUser.created_at,
       }
+
+      await client.end()
+
+      // Create a JWT token
+      const token = await createToken(newUser.id, newUser.token_version)
+      // console.log('Token', token)
+
+      // Send the JWT token to the frontend
+      sendToken(ctx.cookies, token)
 
       return returnedUser
     } catch (error) {

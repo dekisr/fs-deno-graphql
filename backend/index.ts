@@ -7,6 +7,7 @@ const { PORT } = config()
 // app.use((ctx) => {
 //   ctx.response.body = 'Hello there from Oak.'
 // })
+
 app.use(GraphQLService.routes(), GraphQLService.allowedMethods())
 console.log(`Server is ready at http://localhost:${PORT}/graphql`)
 await app.listen({ port: Number(PORT) })

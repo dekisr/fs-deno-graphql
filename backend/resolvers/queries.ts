@@ -5,6 +5,7 @@ export const Query = {
     await client.connect()
     const result = await client.query('SELECT * FROM users;')
     const users = result.rowsOfObjects()
+    await client.end()
     return users
   },
 }
