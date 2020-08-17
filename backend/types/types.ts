@@ -23,3 +23,10 @@ export interface User {
   roles: RoleOptions[]
   created_at: string
 }
+
+export type SignupArgs = Pick<User, 'username' | 'email' | 'password'>
+
+export type UserResponse = Pick<
+  User,
+  'id' | 'username' | 'email' | 'roles' | 'created_at'
+>
