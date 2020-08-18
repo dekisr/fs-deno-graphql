@@ -1,3 +1,13 @@
+import 'https://deno.land/x/oak/mod.ts'
+
+declare module 'https://deno.land/x/oak/mod.ts' {
+  interface Request {
+    userId?: string
+    tokenVersion?: number
+    exp?: number
+  }
+}
+
 export enum Provider {
   facebook = 'Facebook',
   google = 'Google',
@@ -31,3 +41,10 @@ export type UserResponse = Pick<
   User,
   'id' | 'username' | 'email' | 'roles' | 'created_at'
 >
+
+export type PayloadInfo = { id: string; token_version: number }
+
+export type ValidPayload = {
+  payloadInfo: PayloadInfo
+  exp: number
+}

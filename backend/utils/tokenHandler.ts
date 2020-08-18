@@ -7,6 +7,7 @@ import {
   Payload,
 } from 'https://deno.land/x/djwt@v1.2/create.ts'
 import { config } from 'https://deno.land/x/dotenv@v0.5.0/mod.ts'
+import { PayloadInfo } from '../types/types.ts'
 
 const { JWT_SECRET, COOKIE_TOKEN_NAME } = config()
 
@@ -16,10 +17,7 @@ const header: Jose = {
 }
 
 export const createToken = (id: string, token_version: number) => {
-  const payloadInfo: {
-    id: string
-    token_version: number
-  } = {
+  const payloadInfo: PayloadInfo = {
     id,
     token_version,
   }
@@ -32,3 +30,6 @@ export const createToken = (id: string, token_version: number) => {
 
 export const sendToken = (cookies: Cookies, token: string) =>
   cookies.set(COOKIE_TOKEN_NAME, token, { httpOnly: true })
+
+export const verifyToken = (token: string) =>
+  validateJwt({ jwt: token, key: JWT_SECRET, algorithm: 'HS256' })
