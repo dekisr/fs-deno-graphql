@@ -1,15 +1,27 @@
 import { RouterContext } from 'https://deno.land/x/oak/mod.ts'
 import * as bcrypt from 'https://deno.land/x/bcrypt@v0.2.4/mod.ts'
 
-import { SignupArgs, UserResponse, User, SigninArgs } from '../types/types.ts'
+import {
+  SignupArgs,
+  UserResponse,
+  User,
+  SigninArgs,
+  ResponseMessage,
+} from '../types/types.ts'
+
 import {
   validateUsername,
   validatePassword,
   validateEmail,
 } from '../utils/validations.ts'
 import { client } from '../db/db.ts'
-import { queryByEmailString, insertUserString } from '../utils/queryStrings.ts'
-import { createToken, sendToken } from '../utils/tokenHandler.ts'
+import { isAuthenticated } from '../utils/authUtils.ts'
+import {
+  queryByEmailString,
+  insertUserString,
+  updateTokenVersionString,
+} from '../utils/queryStrings.ts'
+import { createToken, sendToken, deleteToken } from '../utils/tokenHandler.ts'
 
 export const Mutation = {
   signup: async (
@@ -119,6 +131,31 @@ export const Mutation = {
       sendToken(ctx.cookies, token)
 
       return returnedUser
+    } catch (error) {
+      throw error
+    }
+  },
+
+  signout: async (
+    _: any,
+    __: any,
+    ctx: RouterContext
+  ): Promise<ResponseMessage | null> => {
+    try {
+      // Query user from the database
+      const user = await isAuthenticated(ctx.request)
+      // Update the token_version by incrasing by 1
+      user.token_version++
+      await client.connect()
+      const updatedUserData = await client.query(
+        updateTokenVersionString(user.id, user.token_version)
+      )
+      const updatedUser = updatedUserData.rowsOfObjects()[0] as User
+      if (!updatedUser) throw new Error('Sorry, cannot proceed.')
+      // Delete the JWT token on cookies in the browser
+      deleteToken(ctx.cookies)
+
+      return { message: 'Goodbye' }
     } catch (error) {
       throw error
     }

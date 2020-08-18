@@ -17,6 +17,10 @@ export const typeDefs = (gql as any)`
     created_at: String!
   }
 
+  type ResponseMessage {
+    message: String!
+  }
+
   type Query {
     users: [User]!
     user: User
@@ -25,5 +29,6 @@ export const typeDefs = (gql as any)`
   type Mutation {
     signup(username: String!, email: String!, password: String!): User
     signin(email: String!, password: String!): User
+    signout: ResponseMessage
   }
 `

@@ -48,3 +48,7 @@ export type ValidPayload = {
   payloadInfo: PayloadInfo
   exp: number
 }
+
+export type ResponseMessage = {
+  message: string
+}

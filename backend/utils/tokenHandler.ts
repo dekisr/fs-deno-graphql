@@ -33,3 +33,6 @@ export const sendToken = (cookies: Cookies, token: string) =>
 
 export const verifyToken = (token: string) =>
   validateJwt({ jwt: token, key: JWT_SECRET, algorithm: 'HS256' })
+
+export const deleteToken = (cookies: Cookies) =>
+  cookies.delete(COOKIE_TOKEN_NAME)

@@ -1,4 +1,4 @@
-import { Context } from 'https://deno.land/x/oak/mod.ts'
+import { RouterContext } from 'https://deno.land/x/oak/mod.ts'
 import { client } from '../db/db.ts'
 import { isAuthenticated } from '../utils/authUtils.ts'
 import { UserResponse } from '../types/types.ts'
@@ -11,7 +11,7 @@ export const Query = {
     await client.end()
     return users
   },
-  user: async (_: any, __: any, ctx: Context): Promise<UserResponse | null> => {
+  user: async (_: any, __: any, ctx: RouterContext): Promise<UserResponse | null> => {
     try {
       const user = await isAuthenticated(ctx.request)
       
