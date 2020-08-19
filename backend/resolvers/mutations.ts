@@ -8,6 +8,7 @@ import {
   User,
   SigninArgs,
   ResponseMessage,
+  UpdateRolesArgs,
 } from '../types/types.ts'
 
 import {
@@ -16,7 +17,7 @@ import {
   validateEmail,
 } from '../utils/validations.ts'
 import { client } from '../db/db.ts'
-import { isAuthenticated } from '../utils/authUtils.ts'
+import { isAuthenticated, isSuperAdmin } from '../utils/authUtils.ts'
 import {
   queryByEmailString,
   insertUserString,
@@ -24,6 +25,8 @@ import {
   updateRequestResetPasswordString,
   queryByResetPasswordTokenString,
   updateResetPasswordString,
+  queryByIdString,
+  updateRolesString,
 } from '../utils/queryStrings.ts'
 import { createToken, sendToken, deleteToken } from '../utils/tokenHandler.ts'
 import { sendEmail } from '../utils/emailHandler.ts'
@@ -246,6 +249,46 @@ export const Mutation = {
         message:
           'Successfully reset your password, you can now signin with your new password.',
       }
+    } catch (error) {
+      throw error
+    }
+  },
+  updateRoles: async (
+    _: any,
+    { id, roles }: UpdateRolesArgs,
+    ctx: RouterContext
+  ): Promise<UserResponse | null> => {
+    try {
+      // Check authentication of the user who call this mutation
+      const admin = await isAuthenticated(ctx.request)
+
+      // Check if the user who is logged is a super admin (Authorization)
+      const isSuper = isSuperAdmin(admin.roles)
+      if (!isSuper) throw new Error('Not authorized.')
+
+      // Prevent the super admin to update their own
+      if (ctx.request.userId === id) throw new Error('Sorry, cannot proceed.')
+
+      // Query the user (to be updated) info from the database
+      await client.connect()
+      const result = await client.query(queryByIdString(id))
+      const user = result.rowsOfObjects()[0] as User
+      if (!user) throw new Error('Sorry, cannot proceed.')
+
+      // Update user info in the database
+      const updatedUserData = await client.query(updateRolesString(id, roles))
+      const updatedUser = updatedUserData.rowsOfObjects()[0] as User
+      if (!updatedUser) throw new Error('Sorry, cannot proceed.')
+
+      await client.end()
+      const returnedUser: UserResponse = {
+        id: updatedUser.id,
+        username: updatedUser.username,
+        email: updatedUser.email,
+        roles: updatedUser.roles,
+        created_at: updatedUser.created_at,
+      }
+      return returnedUser
     } catch (error) {
       throw error
     }

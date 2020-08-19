@@ -52,3 +52,8 @@ export type ValidPayload = {
 export type ResponseMessage = {
   message: string
 }
+
+export type UpdateRolesArgs = {
+  id: string
+  roles: RoleOptions[]
+}

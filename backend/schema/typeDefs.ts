@@ -32,5 +32,6 @@ export const typeDefs = (gql as any)`
     signout: ResponseMessage
     requestToResetPassword(email: String!): ResponseMessage
     resetPassword(password: String!, token: String!): ResponseMessage
+    updateRoles(id: String!, roles: [RoleOptions!]!): User
   }
 `
