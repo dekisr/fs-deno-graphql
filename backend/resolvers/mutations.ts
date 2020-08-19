@@ -22,6 +22,8 @@ import {
   insertUserString,
   updateTokenVersionString,
   updateRequestResetPasswordString,
+  queryByResetPasswordTokenString,
+  updateResetPasswordString,
 } from '../utils/queryStrings.ts'
 import { createToken, sendToken, deleteToken } from '../utils/tokenHandler.ts'
 import { sendEmail } from '../utils/emailHandler.ts'
@@ -90,7 +92,6 @@ export const Mutation = {
       throw error
     }
   },
-
   signin: async (
     _: any,
     { email, password }: SigninArgs,
@@ -138,7 +139,6 @@ export const Mutation = {
       throw error
     }
   },
-
   signout: async (
     _: any,
     __: any,
@@ -164,7 +164,6 @@ export const Mutation = {
       throw error
     }
   },
-
   requestToResetPassword: async (
     _: any,
     { email }: { email: string }
@@ -210,6 +209,42 @@ export const Mutation = {
 
       return {
         message: 'Please check your email to reset your password.',
+      }
+    } catch (error) {
+      throw error
+    }
+  },
+  resetPassword: async (
+    _: any,
+    { password, token }: { password: string; token: string }
+  ): Promise<ResponseMessage | null> => {
+    try {
+      if (!password || !token) throw new Error('Sorry, cannot proceed.')
+
+      await client.connect()
+      // Query user from the database by reset password token
+      const result = await client.query(queryByResetPasswordTokenString(token))
+      const user = result.rowsOfObjects()[0] as User
+      if (!user) throw new Error('Sorry, cannot proceed.')
+
+      // Check if the token is expired
+      if (!user.reset_password_token_expiry)
+        throw new Error('Sorry, cannot proceed.')
+      const isTokenExpired = user.reset_password_token_expiry < Date.now()
+      if (isTokenExpired) throw new Error('Sorry, cannot proceed.')
+
+      // Hash the password
+      const hashedPassword = await bcrypt.hash(password)
+      // Update the user info in the database
+      const updatedUserData = await client.query(
+        updateResetPasswordString(user.id, hashedPassword)
+      )
+      const updatedUser = updatedUserData.rowsOfObjects()[0] as User
+      if (!updatedUser) throw new Error('Sorry, cannot proceed.')
+      await client.end()
+      return {
+        message:
+          'Successfully reset your password, you can now signin with your new password.',
       }
     } catch (error) {
       throw error
