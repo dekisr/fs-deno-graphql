@@ -27,6 +27,7 @@ import {
   updateResetPasswordString,
   queryByIdString,
   updateRolesString,
+  deleteUserByIdString,
 } from '../utils/queryStrings.ts'
 import { createToken, sendToken, deleteToken } from '../utils/tokenHandler.ts'
 import { sendEmail } from '../utils/emailHandler.ts'
@@ -289,6 +290,39 @@ export const Mutation = {
         created_at: updatedUser.created_at,
       }
       return returnedUser
+    } catch (error) {
+      throw error
+    }
+  },
+  deleteUser: async (
+    _: any,
+    { id }: { id: string },
+    ctx: RouterContext
+  ): Promise<ResponseMessage | null> => {
+    try {
+      // Check authentication of the user who call this mutation
+      const admin = await isAuthenticated(ctx.request)
+
+      // Check if the user who is logged is a super admin (Authorization)
+      const isSuper = isSuperAdmin(admin.roles)
+      if (!isSuper) throw new Error('Not authorized.')
+
+      // Prevent the super admin to delete themselves
+      if (ctx.request.userId === id) throw new Error('Sorry, cannot proceed.')
+
+      // Query the user (to be updated) info from the database
+      await client.connect()
+      const result = await client.query(queryByIdString(id))
+      const user = result.rowsOfObjects()[0] as User
+      if (!user) throw new Error('Sorry, cannot proceed.')
+
+      // Delete user from the database
+      const deletedUserData = await client.query(deleteUserByIdString(id))
+      if (!deletedUserData?.query?.result?.rowCount)
+        throw new Error('Sorry, cannot proceed.')
+
+      await client.end()
+      return { message: `The user ID: ${id}, has been deleted.` }
     } catch (error) {
       throw error
     }
