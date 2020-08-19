@@ -23,3 +23,6 @@ export const isAuthenticated = async (request: Request) => {
 
 export const isSuperAdmin = (roles: RoleOptions[]) =>
   roles.includes(RoleOptions.superAdmin)
+
+export const checkAdmin = (roles: RoleOptions[]) =>
+  roles.includes(RoleOptions.admin)
