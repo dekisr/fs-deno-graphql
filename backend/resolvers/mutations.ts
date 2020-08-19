@@ -1,3 +1,4 @@
+import { v4 } from 'https://deno.land/std/uuid/mod.ts'
 import { RouterContext } from 'https://deno.land/x/oak/mod.ts'
 import * as bcrypt from 'https://deno.land/x/bcrypt@v0.2.4/mod.ts'
 
@@ -20,8 +21,10 @@ import {
   queryByEmailString,
   insertUserString,
   updateTokenVersionString,
+  updateRequestResetPasswordString,
 } from '../utils/queryStrings.ts'
 import { createToken, sendToken, deleteToken } from '../utils/tokenHandler.ts'
+import { sendEmail } from '../utils/emailHandler.ts'
 
 export const Mutation = {
   signup: async (
@@ -152,10 +155,62 @@ export const Mutation = {
       )
       const updatedUser = updatedUserData.rowsOfObjects()[0] as User
       if (!updatedUser) throw new Error('Sorry, cannot proceed.')
+      await client.end()
       // Delete the JWT token on cookies in the browser
       deleteToken(ctx.cookies)
 
       return { message: 'Goodbye' }
+    } catch (error) {
+      throw error
+    }
+  },
+
+  requestToResetPassword: async (
+    _: any,
+    { email }: { email: string }
+  ): Promise<ResponseMessage | null> => {
+    try {
+      if (!email) throw new Error('Email is required.')
+
+      // Query user from the database
+      await client.connect()
+      const formatedEmail = email.trim().toLowerCase()
+      const result = await client.query(queryByEmailString(formatedEmail))
+      const user = result.rowsOfObjects()[0] as User
+      if (!user) throw new Error('Email not found.')
+
+      // Create reset password token, expiry time
+      const uuid = v4.generate()
+      const reset_password_token = await bcrypt.hash(uuid)
+      const reset_password_token_expiry = Date.now() + 1000 * 60 * 30
+
+      // Update user in the database
+      const updatedUserData = await client.query(
+        updateRequestResetPasswordString(
+          formatedEmail,
+          reset_password_token,
+          reset_password_token_expiry
+        )
+      )
+      const updatedUser = updatedUserData.rowsOfObjects()[0] as User
+      if (!updatedUser) throw new Error('Sorry, cannot proceed.')
+      await client.end()
+
+      // Send a link to user's email
+      const fromEmail = 'super_admin@test.com'
+      const subject = 'Reset Your Password'
+      const html = `
+          <div style={{width: "60%"}}>
+            <p>Please click the link below to reset your password.</p> \n\n
+            <a href="http://localhost/?resetToken${reset_password_token}" target="_blank" rel="noreferrer noopener" style={{color: "blue"}}>Click to reset your password.</a>
+          </div>
+      `
+      const response = await sendEmail(fromEmail, formatedEmail, subject, html)
+      if (!response.ok) throw new Error('Sorry, cannot proceed.')
+
+      return {
+        message: 'Please check your email to reset your password.',
+      }
     } catch (error) {
       throw error
     }

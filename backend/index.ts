@@ -3,7 +3,7 @@ import { GraphQLService } from './server.ts'
 import { config } from 'https://deno.land/x/dotenv@v0.5.0/mod.ts'
 import { checkToken } from './middlewares/index.ts'
 
-const { PORT} = config()
+const { PORT } = config()
 const app = new Application()
 // app.use((ctx) => {
 //   ctx.response.body = 'Hello there from Oak.'

@@ -30,5 +30,7 @@ export const typeDefs = (gql as any)`
     signup(username: String!, email: String!, password: String!): User
     signin(email: String!, password: String!): User
     signout: ResponseMessage
+    requestToResetPassword(email: String!): ResponseMessage
+    resetPassword(password: String!, token: String!): ResponseMessage
   }
 `
