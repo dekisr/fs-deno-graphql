@@ -1,4 +1,4 @@
-import { Request } from 'https://deno.land/x/oak/mod.ts'
+import { Request } from '../deps/oak.ts'
 import { client } from '../db/db.ts'
 import { queryByIdString } from './queryStrings.ts'
 import { User, RoleOptions } from '../types/types.ts'

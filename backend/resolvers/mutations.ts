@@ -1,6 +1,6 @@
-import { v4 } from 'https://deno.land/std/uuid/mod.ts'
-import { RouterContext } from 'https://deno.land/x/oak/mod.ts'
-import * as bcrypt from 'https://deno.land/x/bcrypt@v0.2.4/mod.ts'
+import { v4 } from '../deps/uuid.ts'
+import { RouterContext } from '../deps/oak.ts'
+import bcrypt from '../deps/bcrypt.ts'
 
 import {
   SignupArgs,

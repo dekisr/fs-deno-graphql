@@ -1,5 +1,5 @@
 import { Client } from 'https://deno.land/x/postgres@v0.4.3/mod.ts'
-import { config } from 'https://deno.land/x/dotenv@v0.5.0/mod.ts'
+import { config } from '../deps/dotenv.ts'
 
 const { DB_NAME, DB_USER, DB_PASSWORD, DB_HOST, DB_PORT } = config()
 

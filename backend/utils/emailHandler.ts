@@ -1,4 +1,4 @@
-import { config } from 'https://deno.land/x/dotenv@v0.5.0/mod.ts'
+import { config } from '../deps/dotenv.ts'
 
 const { SENDGRID_API_ENDPOINT, SENDGRID_API_KEY } = config()
 
