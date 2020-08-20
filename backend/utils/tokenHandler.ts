@@ -23,7 +23,7 @@ export const createToken = (id: string, token_version: number) => {
   }
   const payload: Payload = {
     payloadInfo,
-    exp: setExpiration(Date.now() + 1000 * 60 * 60 * 24 * 15),
+    exp: setExpiration(60*60*24*15),
   }
   return makeJwt({ header, key: JWT_SECRET, payload })
 }
