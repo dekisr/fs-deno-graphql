@@ -188,7 +188,6 @@ const SignUp: React.FC<Props> = () => {
     } catch (error) {
       setAuthUser(null)
     }
-    console.log(username, ':', email, ':', password)
   })
 
   return (
