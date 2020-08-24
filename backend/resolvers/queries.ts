@@ -55,7 +55,7 @@ export const Query = {
 
       return returnedUser
     } catch (error) {
-      throw error
+      return null
     }
   },
 }
