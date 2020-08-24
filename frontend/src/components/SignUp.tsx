@@ -1,9 +1,14 @@
 import React, { useContext } from 'react'
 import styled from 'styled-components'
-import { useForm } from 'react-hook-form'
+import { useForm, ErrorMessage } from 'react-hook-form'
+import { useMutation } from '@apollo/client'
+import { useRouter } from 'next/router'
+import Loader from 'react-loader-spinner'
 
 import Modal from './modal/Modal'
 import { AuthContext } from '../context/AuthContextProvider'
+import { SIGN_UP } from '../apollo/mutations'
+import { User, SignupArgs } from '../types'
 
 interface Props {}
 
@@ -81,7 +86,7 @@ export const StyledError = styled.p`
   margin: 0;
   padding: 0;
   color: red;
-  font-size: 1.5rem;
+  font-size: 1.2rem;
 `
 
 export const StyledSwitchAction = styled.div`
@@ -154,14 +159,35 @@ export const Divider = styled.hr`
 `
 
 const SignUp: React.FC<Props> = () => {
-  const { handleAuthAction } = useContext(AuthContext)
-  const { register, handleSubmit } = useForm<{
-    username: string
-    email: string
-    password: string
-  }>()
+  const { handleAuthAction, setAuthUser } = useContext(AuthContext)
+  const { register, handleSubmit, errors } = useForm<SignupArgs>()
 
-  const submitSignup = handleSubmit(({ username, email, password }) => {
+  const router = useRouter()
+
+  const [signup, { loading, error }] = useMutation<
+    { signup: User },
+    SignupArgs
+  >(SIGN_UP)
+
+  const submitSignup = handleSubmit(async ({ username, email, password }) => {
+    try {
+      const response = await signup({
+        variables: { username, email, password },
+      })
+      if (response?.data) {
+        const { signup } = response.data
+        if (signup) {
+          // Close the form
+          handleAuthAction('close')
+          // Set the loggedInUser in the context api
+          setAuthUser(signup)
+          // Push the user to their dashboard
+          router.push('/dashboard')
+        }
+      }
+    } catch (error) {
+      setAuthUser(null)
+    }
     console.log(username, ':', email, ':', password)
   })
 
@@ -184,8 +210,21 @@ const SignUp: React.FC<Props> = () => {
               id="username"
               placeholder="Your username"
               autoComplete="new-password"
-              ref={register()}
+              ref={register({
+                required: 'Username is required.',
+                minLength: {
+                  value: 3,
+                  message: 'Username must be at least 3 characters.',
+                },
+                maxLength: {
+                  value: 200,
+                  message: 'Username cannot be greater than 3 characters.',
+                },
+              })}
             />
+            <ErrorMessage errors={errors} name="username">
+              {({ message }) => <StyledError>{message}</StyledError>}
+            </ErrorMessage>
           </InputContainer>
 
           <InputContainer>
@@ -197,8 +236,17 @@ const SignUp: React.FC<Props> = () => {
               id="email"
               placeholder="Your email"
               autoComplete="new-password"
-              ref={register()}
+              ref={register({
+                required: 'Email is required.',
+                pattern: {
+                  value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                  message: 'Email is invalid.',
+                },
+              })}
             />
+            <ErrorMessage errors={errors} name="email">
+              {({ message }) => <StyledError>{message}</StyledError>}
+            </ErrorMessage>
           </InputContainer>
 
           <InputContainer>
@@ -209,10 +257,44 @@ const SignUp: React.FC<Props> = () => {
               name="password"
               id="password"
               placeholder="Your password"
-              ref={register()}
+              ref={register({
+                required: 'Password is required.',
+                minLength: {
+                  value: 6,
+                  message: 'Password must be at least 6 characters.',
+                },
+                maxLength: {
+                  value: 30,
+                  message: 'Password cannot be greater than 30 characters.',
+                },
+              })}
             />
+            <ErrorMessage errors={errors} name="password">
+              {({ message }) => <StyledError>{message}</StyledError>}
+            </ErrorMessage>
           </InputContainer>
-          <Button>Submit</Button>
+          <Button
+            disabled={loading}
+            style={{ cursor: loading ? 'not-allowed' : 'pointer' }}
+          >
+            {loading ? (
+              <Loader
+                type="Oval"
+                color="white"
+                height={30}
+                width={30}
+                timeout={3000}
+              />
+            ) : (
+              'Submit'
+            )}
+          </Button>
+          <StyledError>
+            {error &&
+              (error.graphQLErrors[0]?.message
+                ? error.graphQLErrors[0]?.message
+                : 'Sorry, something went wrong.')}
+          </StyledError>
         </StyledForm>
         <StyledSwitchAction>
           <p>

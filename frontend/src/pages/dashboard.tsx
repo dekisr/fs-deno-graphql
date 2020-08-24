@@ -11,5 +11,5 @@ export default function Dashboard() {
     if (!loggedInUser) router.push('/')
   }, [loggedInUser])
 
-  return !loggedInUser ? <p>Loading...</p> : <h2>Dashboard</h2>
+  return !loggedInUser ? <p>Loading...</p> : <h2>{loggedInUser.username}'s Dashboard</h2>
 }

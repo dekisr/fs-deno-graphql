@@ -14,12 +14,14 @@ interface AuthContextValues {
   authAction: Actions
   handleAuthAction: HandleAuthAction
   loggedInUser: User | null
+  setAuthUser: (user: User | null) => void
 }
 
 const initialState: AuthContextValues = {
   authAction: 'close',
   handleAuthAction: () => {},
   loggedInUser: null,
+  setAuthUser: () => {},
 }
 
 export const AuthContext = createContext<AuthContextValues>(initialState)
@@ -40,12 +42,15 @@ const AuthContextProvider: React.FC<Props> = ({ children }) => {
     setAuthAction(action)
   }, [])
 
+  const setAuthUser = (user: User | null) => setLoggedInUser(user)
+
   return (
     <AuthContext.Provider
       value={{
         authAction,
         handleAuthAction,
         loggedInUser,
+        setAuthUser,
       }}
     >
       {children}
