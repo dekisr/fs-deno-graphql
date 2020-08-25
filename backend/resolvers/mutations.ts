@@ -117,6 +117,10 @@ export const Mutation = {
       const user = result.rowsOfObjects()[0] as User
       if (!user) throw new Error('Email or password is invalid')
 
+      // Check if the reset_password_token is not null
+      if (user.reset_password_token)
+        throw new Error('Please reset your password.')
+
       // Validate the password
       const isPasswordValid = await bcrypt.compare(password, user.password)
       if (!isPasswordValid) throw new Error('Email or password is invalid')
@@ -205,7 +209,7 @@ export const Mutation = {
       const html = `
           <div style={{width: "60%"}}>
             <p>Please click the link below to reset your password.</p> \n\n
-            <a href="http://localhost/?resetToken${reset_password_token}" target="_blank" rel="noreferrer noopener" style={{color: "blue"}}>Click to reset your password.</a>
+            <a href="http://localhost:3000/?resetToken=${reset_password_token}" target="_blank" rel="noreferrer noopener" style={{color: "blue"}}>Click to reset your password.</a>
           </div>
       `
       const response = await sendEmail(fromEmail, formatedEmail, subject, html)

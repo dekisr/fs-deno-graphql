@@ -1,4 +1,4 @@
-import React, { useContext } from 'react'
+import React, { useContext, useEffect } from 'react'
 import Head from 'next/head'
 import { useRouter } from 'next/router'
 import styled, { createGlobalStyle, ThemeProvider } from 'styled-components'
@@ -70,9 +70,13 @@ const DisplayedPage = styled.div`
 `
 
 const Layout: React.FC<Props> = ({ children }) => {
-  const { authAction } = useContext(AuthContext)
+  const { authAction, handleAuthAction } = useContext(AuthContext)
 
-  const { pathname } = useRouter()
+  const { pathname, query } = useRouter()
+
+  useEffect(() => {
+    if (query?.resetToken) handleAuthAction('reset')
+  }, [query])
 
   return (
     <ThemeProvider theme={theme}>
@@ -83,14 +87,14 @@ const Layout: React.FC<Props> = ({ children }) => {
             <title>
               {pathname === '/' ? 'HOME' : pathname.split('/')[1].toUpperCase()}
             </title>
-            <meta charSet='utf-8' />
+            <meta charSet="utf-8" />
             <meta
-              name='viewport'
-              content='initial-scale=1.0, width=device-width'
+              name="viewport"
+              content="initial-scale=1.0, width=device-width"
             />
             <link
-              href='https://fonts.googleapis.com/css2?family=Noto+Sans&family=Roboto&display=swap'
-              rel='stylesheet'
+              href="https://fonts.googleapis.com/css2?family=Noto+Sans&family=Roboto&display=swap"
+              rel="stylesheet"
             />
           </Head>
 
@@ -122,7 +126,7 @@ const Layout: React.FC<Props> = ({ children }) => {
                   {authAction === 'reset' && (
                     <>
                       <Backdrop />
-                      <ResetPassword />
+                      <ResetPassword token={query?.resetToken as string} />
                     </>
                   )}
                 </>

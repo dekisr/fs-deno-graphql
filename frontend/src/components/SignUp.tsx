@@ -109,7 +109,7 @@ export const StyledInform = styled.div`
   width: 100%;
 
   p {
-    font-size: 1.4rem;
+    font-size: 1.2rem;
     color: ${(props) => props.theme.colors.teal};
     padding: 0;
   }
@@ -234,7 +234,7 @@ const SignUp: React.FC<Props> = () => {
               name="email"
               id="email"
               placeholder="Your email"
-              autoComplete="new-password"
+              autoComplete="new-email"
               ref={register({
                 required: 'Email is required.',
                 pattern: {
@@ -288,12 +288,12 @@ const SignUp: React.FC<Props> = () => {
               'Submit'
             )}
           </Button>
-          <StyledError>
-            {error &&
-              (error.graphQLErrors[0]?.message
-                ? error.graphQLErrors[0]?.message
-                : 'Sorry, something went wrong.')}
-          </StyledError>
+          {error && (
+            <StyledError>
+              {error.graphQLErrors[0]?.message ||
+                'Sorry, something went wrong.'}
+            </StyledError>
+          )}
         </StyledForm>
         <StyledSwitchAction>
           <p>

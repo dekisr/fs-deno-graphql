@@ -78,7 +78,7 @@ const SignIn: React.FC<Props> = () => {
               name="email"
               id="email"
               placeholder="Your email"
-              autoComplete="new-password"
+              autoComplete="your-email"
               ref={register({
                 required: 'Email is required.',
                 pattern: {
@@ -124,12 +124,12 @@ const SignIn: React.FC<Props> = () => {
               'Submit'
             )}
           </Button>
-          <StyledError>
-            {error &&
-              (error.graphQLErrors[0]?.message
-                ? error.graphQLErrors[0]?.message
-                : 'Sorry, something went wrong.')}
-          </StyledError>
+          {error && (
+            <StyledError>
+              {error.graphQLErrors[0]?.message ||
+                'Sorry, something went wrong.'}
+            </StyledError>
+          )}
         </StyledForm>
         <StyledSwitchAction>
           <p>
