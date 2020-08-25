@@ -10,7 +10,12 @@ import { updateTokenVersionString } from '../utils/queryStrings.ts'
 const { COOKIE_TOKEN_NAME } = config()
 
 export const checkToken: Middleware = async (ctx, next) => {
-  const token = ctx.cookies.get(COOKIE_TOKEN_NAME)
+  let token: string | undefined
+  const authorization = ctx.request.headers.get('Authorization')
+
+  if (authorization) token = authorization.split(' ')[1]
+  else token = ctx.cookies.get(COOKIE_TOKEN_NAME)
+  
   if (token) {
     // Decode the token
     const decodedToken: JwtValidation = await verifyToken(token)
