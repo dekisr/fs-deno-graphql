@@ -6,7 +6,7 @@ import Loader from 'react-loader-spinner'
 
 import { User, Role } from '../types'
 import { isSuperAdmin } from '../helpers/authHelpers'
-import { UPDATE_ROLES } from '../apollo/mutations'
+import { UPDATE_ROLES, DELETE_USER } from '../apollo/mutations'
 import { QUERY_USERS } from '../apollo/queries'
 import { StyledError } from './SignUp'
 
@@ -67,11 +67,34 @@ const AdminRow: React.FC<Props> = ({ user, admin }) => {
         setIsEditing(false)
       }
     } catch (error) {
-      console.log(123)
+      console.log(error)
     }
   }
 
-  console.log(user.username)
+  const [deleteUser, deleteUserResponse] = useMutation<
+    { deleteUser: { message: string } },
+    { id: string }
+  >(DELETE_USER)
+
+  useEffect(() => {
+    if (deleteUserResponse.error)
+      alert(deleteUserResponse.error?.graphQLErrors[0]?.message)
+  }, [deleteUserResponse.error])
+
+  const handleSubmitDeleteUser = async (id: string) => {
+    try {
+      const response = await deleteUser({
+        variables: { id },
+        refetchQueries: [{ query: QUERY_USERS }],
+      })
+
+      if (response.data?.deleteUser?.message) {
+        alert(response.data.deleteUser.message)
+      }
+    } catch (error) {
+      console.log(error)
+    }
+  }
 
   return (
     <>
@@ -226,17 +249,22 @@ const AdminRow: React.FC<Props> = ({ user, admin }) => {
             )}
 
             <td>
-              <DeleteBtn
-                style={{ cursor: isEditing ? 'not-allowed' : undefined }}
-                disabled={isEditing}
-              >
-                <FontAwesomeIcon icon={['fas', 'trash-alt']} size="lg" />
-              </DeleteBtn>
+              {isSuperAdmin(user) ? null : (
+                <DeleteBtn
+                  onClick={() => {
+                    if (!confirm('Are you sure?')) return
+                    handleSubmitDeleteUser(user.id)
+                  }}
+                  style={{ cursor: isEditing ? 'not-allowed' : undefined }}
+                  disabled={isEditing}
+                >
+                  <FontAwesomeIcon icon={['fas', 'trash-alt']} size="lg" />
+                </DeleteBtn>
+              )}
             </td>
           </>
         )}
       </tr>
-      {error && <StyledError>{error.graphQLErrors[0]?.message}</StyledError>}
     </>
   )
 }

@@ -54,3 +54,10 @@ export const UPDATE_ROLES = gql`
     }
   }
 `
+export const DELETE_USER = gql`
+  mutation DELETE_USER($id: String!) {
+    deleteUser(id: $id) {
+      message
+    }
+  }
+`
