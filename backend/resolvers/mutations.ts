@@ -209,7 +209,10 @@ export const Mutation = {
           </div>
       `
       const response = await sendEmail(fromEmail, formatedEmail, subject, html)
-      if (!response.ok) throw new Error('Sorry, cannot proceed.')
+      if (!response.ok) {
+        console.log('error -->', response.error)
+        throw new Error('Sorry, cannot proceed.')
+      }
 
       return {
         message: 'Please check your email to reset your password.',

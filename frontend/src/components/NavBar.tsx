@@ -3,9 +3,12 @@ import Link from 'next/link'
 import { useRouter } from 'next/router'
 import styled from 'styled-components'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { useMutation } from '@apollo/client'
 
 import { AuthContext } from '../context/AuthContextProvider'
 import { isAdmin } from '../helpers/authHelpers'
+import { SIGN_OUT } from '../apollo/mutations'
+import { faWindows } from '@fortawesome/free-brands-svg-icons'
 
 interface Props {}
 
@@ -106,9 +109,28 @@ const HamMenu = styled.div`
 `
 
 const NavBar: React.FC<Props> = () => {
-  const { handleAuthAction, loggedInUser } = useContext(AuthContext)
+  const { handleAuthAction, loggedInUser, setAuthUser } = useContext(
+    AuthContext
+  )
 
   const router = useRouter()
+
+  const [signout] = useMutation<{ signout: { message: string } }>(SIGN_OUT)
+
+  const handleSignOut = async () => {
+    try {
+      const response = await signout()
+      if (response?.data?.signout?.message) {
+        // Set the loggedIn user in the context api to null
+        setAuthUser(null)
+        window.localStorage.setItem('signout', Date.now().toString())
+        // Push the user to the home page
+        router.push('/')
+      }
+    } catch (error) {
+      console.log(error)
+    }
+  }
 
   return (
     <Header>
@@ -149,7 +171,7 @@ const NavBar: React.FC<Props> = () => {
         </Ul>
         <Actions>
           {loggedInUser ? (
-            <button>Sign Out</button>
+            <button onClick={handleSignOut}>Sign Out</button>
           ) : (
             <>
               <button onClick={() => handleAuthAction('signin')}>
