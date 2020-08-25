@@ -30,7 +30,7 @@ export default function AdminPage({ user }: { user: User }) {
     setAuthUser(user)
   }, [user])
 
-  return !user ? <p>Loading...</p> : <Admin />
+  return !user ? <p>Loading...</p> : <Admin admin={user} />
 }
 
 const USER_INFO = {

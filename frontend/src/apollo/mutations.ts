@@ -43,3 +43,14 @@ export const RESET_PASSWORD = gql`
     }
   }
 `
+export const UPDATE_ROLES = gql`
+  mutation UPDATE_ROLES($id: String!, $roles: [RoleOptions!]!) {
+    updateRoles(id: $id, roles: $roles) {
+      id
+      username
+      email
+      roles
+      created_at
+    }
+  }
+`
