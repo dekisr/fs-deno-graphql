@@ -9,6 +9,8 @@ import Modal from './modal/Modal'
 import { AuthContext } from '../context/AuthContextProvider'
 import { SIGN_UP } from '../apollo/mutations'
 import { User, SignupArgs } from '../types'
+import FBLoginButton from './FacebookLogin'
+import GoogleLoginButton from './GoogleLogin'
 
 interface Props {}
 
@@ -190,12 +192,38 @@ const SignUp: React.FC<Props> = () => {
     }
   })
 
+  const facebookLogin = async (response: {
+    name: string
+    id: string
+    email: string
+    expiresIn: number
+  }) => {
+    const { id, name, email, expiresIn } = response
+    console.log(id, name, email, expiresIn)
+  }
+
+  const googleLogin = async (response: {
+    profileObj: { googleId: string; name: string; email: string }
+    tokenObj: { expires_in: number }
+  }) => {
+    const {
+      profileObj: { googleId, name, email },
+      tokenObj: { expires_in },
+    } = response
+    console.log(googleId, name, email, expires_in)
+  }
+
   return (
     <Modal>
       <FormContainer>
         <Header>
           <h2>Sign Up</h2>
         </Header>
+
+        <StyledSocial>
+          <FBLoginButton cb={facebookLogin} cssClass="facebook" />
+          <GoogleLoginButton cb={googleLogin} cssClass="google" />
+        </StyledSocial>
 
         <Divider />
 
