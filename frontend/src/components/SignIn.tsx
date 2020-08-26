@@ -16,16 +16,26 @@ import {
   StyledSwitchAction,
   Divider,
   StyledError,
+  StyledSocial,
 } from './SignUp'
 import { SIGN_IN } from '../apollo/mutations'
 import { SigninArgs, User } from '../types'
 import { isAdmin } from '../helpers/authHelpers'
+import { useSocialMediaLogin } from '../context/useSocialMediaLogin'
+import FBLoginButton from './FacebookLogin'
+import GoogleLoginButton from './GoogleLogin'
 
 interface Props {}
 
 const SignIn: React.FC<Props> = () => {
   const { handleAuthAction, setAuthUser } = useContext(AuthContext)
   const { register, handleSubmit, errors } = useForm<SigninArgs>()
+  const {
+    facebookLogin,
+    googleLogin,
+    loadingResult,
+    errorResult,
+  } = useSocialMediaLogin()
 
   const router = useRouter()
 
@@ -65,6 +75,11 @@ const SignIn: React.FC<Props> = () => {
         <Header>
           <h2>Sign In</h2>
         </Header>
+
+        <StyledSocial>
+          <FBLoginButton cb={facebookLogin} cssClass="facebook" />
+          <GoogleLoginButton cb={googleLogin} cssClass="google" />
+        </StyledSocial>
 
         <Divider />
 
@@ -112,7 +127,7 @@ const SignIn: React.FC<Props> = () => {
             disabled={loading}
             style={{ cursor: loading ? 'not-allowed' : 'pointer' }}
           >
-            {loading ? (
+            {loading || loadingResult ? (
               <Loader
                 type="Oval"
                 color="white"
@@ -124,12 +139,11 @@ const SignIn: React.FC<Props> = () => {
               'Submit'
             )}
           </Button>
-          {error && (
-            <StyledError>
-              {error.graphQLErrors[0]?.message ||
-                'Sorry, something went wrong.'}
-            </StyledError>
-          )}
+          {error ? (
+            <StyledError>{error.graphQLErrors[0]?.message}</StyledError>
+          ) : errorResult ? (
+            <StyledError>{errorResult.graphQLErrors[0]?.message}</StyledError>
+          ) : null}
         </StyledForm>
         <StyledSwitchAction>
           <p>

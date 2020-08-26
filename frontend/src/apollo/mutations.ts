@@ -61,3 +61,26 @@ export const DELETE_USER = gql`
     }
   }
 `
+export const SOCIAL_MEDIA_LOGIN = gql`
+  mutation SOCIAL_MEDIA_LOGIN(
+    $username: String!
+    $email: String
+    $id: String!
+    $expiration: String!
+    $provider: Provider!
+  ) {
+    socialMediaLogin(
+      username: $username
+      email: $email
+      id: $id
+      expiration: $expiration
+      provider: $provider
+    ) {
+      id
+      username
+      email
+      roles
+      created_at
+    }
+  }
+`

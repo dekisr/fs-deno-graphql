@@ -8,5 +8,14 @@ export interface User {
   created_at: string
 }
 
+export enum Provider {
+  facebook = 'Facebook',
+  google = 'Google',
+}
+
 export type SignupArgs = Pick<User, 'username' | 'email'> & { password: string }
 export type SigninArgs = Omit<SignupArgs, 'username'>
+export type SocialMediaLoginArgs = Pick<User, 'id' | 'username' | 'email'> & {
+  expiration: string
+  provider: Provider
+}

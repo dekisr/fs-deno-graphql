@@ -11,6 +11,7 @@ import { SIGN_UP } from '../apollo/mutations'
 import { User, SignupArgs } from '../types'
 import FBLoginButton from './FacebookLogin'
 import GoogleLoginButton from './GoogleLogin'
+import { useSocialMediaLogin } from '../context/useSocialMediaLogin'
 
 interface Props {}
 
@@ -163,6 +164,12 @@ export const Divider = styled.hr`
 const SignUp: React.FC<Props> = () => {
   const { handleAuthAction, setAuthUser } = useContext(AuthContext)
   const { register, handleSubmit, errors } = useForm<SignupArgs>()
+  const {
+    facebookLogin,
+    googleLogin,
+    loadingResult,
+    errorResult,
+  } = useSocialMediaLogin()
 
   const router = useRouter()
 
@@ -191,27 +198,6 @@ const SignUp: React.FC<Props> = () => {
       setAuthUser(null)
     }
   })
-
-  const facebookLogin = async (response: {
-    name: string
-    id: string
-    email: string
-    expiresIn: number
-  }) => {
-    const { id, name, email, expiresIn } = response
-    console.log(id, name, email, expiresIn)
-  }
-
-  const googleLogin = async (response: {
-    profileObj: { googleId: string; name: string; email: string }
-    tokenObj: { expires_in: number }
-  }) => {
-    const {
-      profileObj: { googleId, name, email },
-      tokenObj: { expires_in },
-    } = response
-    console.log(googleId, name, email, expires_in)
-  }
 
   return (
     <Modal>
@@ -304,7 +290,7 @@ const SignUp: React.FC<Props> = () => {
             disabled={loading}
             style={{ cursor: loading ? 'not-allowed' : 'pointer' }}
           >
-            {loading ? (
+            {loading || loadingResult ? (
               <Loader
                 type="Oval"
                 color="white"
@@ -316,12 +302,11 @@ const SignUp: React.FC<Props> = () => {
               'Submit'
             )}
           </Button>
-          {error && (
-            <StyledError>
-              {error.graphQLErrors[0]?.message ||
-                'Sorry, something went wrong.'}
-            </StyledError>
-          )}
+          {error ? (
+            <StyledError>{error.graphQLErrors[0]?.message}</StyledError>
+          ) : errorResult ? (
+            <StyledError>{errorResult.graphQLErrors[0]?.message}</StyledError>
+          ) : null}
         </StyledForm>
         <StyledSwitchAction>
           <p>
