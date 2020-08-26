@@ -125,6 +125,13 @@ export const Mutation = {
       if (user.reset_password_token)
         throw new Error('Please reset your password.')
 
+      // Check if the user is facebook or google user, force them to reset
+      if (
+        (!!user.facebook_id && user.password === Provider.facebook) ||
+        (!!user.google_id && user.password === Provider.google)
+      )
+        throw new Error('Please reset your password.')
+
       // Validate the password
       const isPasswordValid = await bcrypt.compare(password, user.password)
       if (!isPasswordValid) throw new Error('Email or password is invalid')
@@ -359,6 +366,28 @@ export const Mutation = {
       const formatedEmail = email.toLowerCase() || provider
 
       if (!user) {
+        // Query user by email
+        const emailUserData = await client.query(
+          queryByEmailString(formatedEmail)
+        )
+        const emailUser = emailUserData?.rowsOfObjects()[0] as User
+
+        if (emailUser) {
+          // Existing user --> send the token
+          await client.end()
+          // Create a JWT token
+          const token = await createToken(emailUser.id, emailUser.token_version)
+          // Send the JWT token to the frontend
+          sendToken(ctx.cookies, token)
+          const returnedUser: UserResponse = {
+            id: emailUser.id,
+            username: emailUser.username,
+            email: emailUser.email,
+            roles: emailUser.roles,
+            created_at: emailUser.created_at,
+          }
+          return returnedUser
+        }
         // New user --> create new user in the database and send the token
         // Check the provider
         let newUserData
