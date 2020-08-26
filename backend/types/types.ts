@@ -57,3 +57,8 @@ export type UpdateRolesArgs = {
   id: string
   roles: RoleOptions[]
 }
+
+export type SocialMediaLoginArgs = Pick<User, 'id' | 'username' | 'email'> & {
+  expiration: string
+  provider: Provider
+}

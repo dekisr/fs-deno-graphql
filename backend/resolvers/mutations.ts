@@ -9,12 +9,15 @@ import {
   SigninArgs,
   ResponseMessage,
   UpdateRolesArgs,
+  SocialMediaLoginArgs,
+  Provider,
 } from '../types/types.ts'
 
 import {
   validateUsername,
   validatePassword,
   validateEmail,
+  validateProviderToken,
 } from '../utils/validations.ts'
 import { client } from '../db/db.ts'
 import { isAuthenticated, isSuperAdmin } from '../utils/authUtils.ts'
@@ -28,6 +31,7 @@ import {
   queryByIdString,
   updateRolesString,
   deleteUserByIdString,
+  queryByProviderIdString,
 } from '../utils/queryStrings.ts'
 import { createToken, sendToken, deleteToken } from '../utils/tokenHandler.ts'
 import { sendEmail } from '../utils/emailHandler.ts'
@@ -330,6 +334,75 @@ export const Mutation = {
 
       await client.end()
       return { message: `The user ID: ${id}, has been deleted.` }
+    } catch (error) {
+      throw error
+    }
+  },
+  socialMediaLogin: async (
+    _: any,
+    { id, username, email, expiration, provider }: SocialMediaLoginArgs,
+    ctx: RouterContext
+  ): Promise<UserResponse | null> => {
+    try {
+      // Check if all args are provided
+      if (!id || !username || !expiration || !provider)
+        throw new Error('Sorry, cannot proceed.')
+      // Validate the token
+      const isTokenValid = validateProviderToken(Number(expiration))
+      if (!isTokenValid) throw new Error('Token is not valid.')
+      // Query user from the database by provider id
+      await client.connect()
+
+      const result = await client.query(queryByProviderIdString(id, provider))
+      const user = result.rowsOfObjects()[0] as User
+
+      const formatedEmail = email.toLowerCase() || provider
+
+      if (!user) {
+        // New user --> create new user in the database and send the token
+        // Check the provider
+        let newUserData
+        if (provider === Provider.facebook) {
+          newUserData = await client.query(
+            insertUserString(username, formatedEmail, provider, id)
+          )
+        }
+        if (provider === Provider.google) {
+          newUserData = await client.query(
+            insertUserString(username, formatedEmail, provider, undefined, id)
+          )
+        }
+        const newUser = newUserData?.rowsOfObjects()[0] as User
+        const returnedUser: UserResponse = {
+          id: newUser.id,
+          username: newUser.username,
+          email: newUser.email,
+          roles: newUser.roles,
+          created_at: newUser.created_at,
+        }
+        await client.end()
+        // Create a JWT token
+        const token = await createToken(newUser.id, newUser.token_version)
+        // Send the JWT token to the frontend
+        sendToken(ctx.cookies, token)
+
+        return returnedUser
+      } else {
+        // Existing user --> send the token
+        await client.end()
+        // Create a JWT token
+        const token = await createToken(user.id, user.token_version)
+        // Send the JWT token to the frontend
+        sendToken(ctx.cookies, token)
+        const returnedUser: UserResponse = {
+          id: user.id,
+          username: user.username,
+          email: user.email,
+          roles: user.roles,
+          created_at: user.created_at,
+        }
+        return returnedUser
+      }
     } catch (error) {
       throw error
     }

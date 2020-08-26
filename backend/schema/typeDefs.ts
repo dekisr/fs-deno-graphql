@@ -21,6 +21,11 @@ export const typeDefs = (gql as any)`
     message: String!
   }
 
+  enum Provider {
+    Facebook
+    Google
+  }
+
   type Query {
     users: [User]!
     user: User
@@ -34,5 +39,6 @@ export const typeDefs = (gql as any)`
     resetPassword(password: String!, token: String!): ResponseMessage
     updateRoles(id: String!, roles: [RoleOptions!]!): User
     deleteUser(id: String!): ResponseMessage
+    socialMediaLogin(username: String!, email: String, id: String!, expiration: String!, provider: Provider!): User
   }
 `
